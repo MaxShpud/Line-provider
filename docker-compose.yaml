@@ -1,13 +1,14 @@
 version: '3.7'
 
 services:
-  bet-maker-backend:
-    container_name: bet-maker-backend
+
+  line-provider-backend:
+    container_name: line-provider-backend
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8001:8001"
+      - "8000:8000"
     volumes:
       - ../src:/app/code
     env_file:
@@ -16,21 +17,23 @@ services:
       - bash
       - -c
       - |
+        while !</dev/tcp/redis/6379; do sleep 1; done;
         while !</dev/tcp/postgresql/5432; do sleep 1; done;
         alembic upgrade head;
-        uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+        uvicorn app.api.rest.main:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
       - postgresql
     networks:
-      - bet-wise-bet-maker
-      - bet-maker-backend
+      -  bet-wise-line-provider
+      -  bet-maker_redis
+      -  bet-maker_bet-maker-backend
 
   postgresql:
-    container_name: postgresql-maker
+    container_name: postgresql
     image: postgres:16.2
     restart: unless-stopped
     ports:
-      - "127.0.0.1:5434:5432"
+      - "127.0.0.1:5433:5432"
     expose:
       - "5432"
     environment:
@@ -43,31 +46,15 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     networks:
-      - bet-wise-bet-maker
-
-  redis:
-    container_name: redis
-    image: redis:7.2.5-alpine
-    restart: unless-stopped
-    ports:
-      - '6379:6379'
-    volumes:
-      - ./redis:/data
-    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
-    networks:
-      - bet-wise-bet-maker
-      - redis
+      - bet-wise-line-provider
 
 volumes:
   postgresql:
-  redis:
 
 networks:
-  bet-wise-bet-maker:
+  bet-wise-line-provider:
     driver: bridge
-  redis:
-    driver: bridge
-    attachable: true
-  bet-maker-backend:
-    driver: bridge
-    attachable: true
+  bet-maker_redis:
+    external: true
+  bet-maker_bet-maker-backend:
+    external: true

@@ -10,4 +10,4 @@ RUN python3 -m pip install --default-timeout=300 -r requirements.txt
 
 COPY src /app/
 
-EXPOSE 8001
+EXPOSE 8000
