@@ -1,0 +1,60 @@
+version: '3.7'
+
+services:
+
+  line-provider-backend:
+    container_name: line-provider-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../src:/app/code
+    env_file:
+      - .env
+    command:
+      - bash
+      - -c
+      - |
+        while !</dev/tcp/redis/6379; do sleep 1; done;
+        while !</dev/tcp/postgresql/5432; do sleep 1; done;
+        alembic upgrade head;
+        uvicorn app.api.rest.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - postgresql
+    networks:
+      -  bet-wise-line-provider
+      -  bet-maker_redis
+      -  bet-maker_bet-maker-backend
+
+  postgresql:
+    container_name: postgresql
+    image: postgres:16.2
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5433:5432"
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+      TZ: "Europe/Moscow"
+    volumes:
+      - postgresql:/var/lib/postgresql/data
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    networks:
+      - bet-wise-line-provider
+
+volumes:
+  postgresql:
+
+networks:
+  bet-wise-line-provider:
+    driver: bridge
+  bet-maker_redis:
+    external: true
+  bet-maker_bet-maker-backend:
+    external: true
