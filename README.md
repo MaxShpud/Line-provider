@@ -1,6 +1,6 @@
 # Line-provider
 
-# In addition to this service, there is a **[bet-maker](https://github.com/MaxShpud/bet-maker)**. 
+# In addition to this service, there is a **[bet-maker](https://github.com/MaxShpud/bet-maker)**. The first step is to launch the bet-maker service.
 
 ## Overview
 
@@ -89,7 +89,7 @@ Once the service is running, you can access the API documentation at `http://loc
  - When updating, the value of the status field is checked against the existing value in the database. 
 If they match, nothing happens and the redis data is simply updated (we do not make a request in the Line-provider, because only the id and status fields are used in the line-provider).
 If the values do not match, then we make a request to the line-provider service for the PUT/bet endpoint and update the value.
-6) GET/api/v1/general/heathcheck checking the application status
+5) GET/api/v1/general/heathcheck checking the application status
 
 ### WORKFLOW FOR TESTING BOTH SERVICES
 ## STEPS:
